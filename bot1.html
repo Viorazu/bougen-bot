@@ -1,0 +1,748 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ここに暴言を捨ててください</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Zen+Kaku+Gothic+New:wght@400;700&display=swap');
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: 'Zen Kaku Gothic New', sans-serif;
+    background: #1a1a1a;
+    color: #e0e0e0;
+    height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .container {
+    width: 90%;
+    max-width: 500px;
+    display: flex;
+    flex-direction: column;
+    height: 92vh;
+  }
+
+  h1 {
+    text-align: center;
+    font-size: 1.3rem;
+    color: #888;
+    margin-bottom: 6px;
+    font-weight: 400;
+    letter-spacing: 0.1em;
+  }
+
+  .subtitle {
+    text-align: center;
+    font-size: 0.85rem;
+    color: #555;
+    margin-bottom: 12px;
+  }
+
+  .select-screen {
+    flex: 1;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    padding-bottom: 16px;
+  }
+
+  .mode-btn {
+    padding: 12px 18px;
+    border: 2px solid #333;
+    border-radius: 14px;
+    background: #222;
+    color: #e0e0e0;
+    font-size: 0.9rem;
+    font-family: 'Zen Kaku Gothic New', sans-serif;
+    cursor: pointer;
+    transition: all 0.25s;
+    text-align: left;
+    line-height: 1.5;
+  }
+
+  .mode-btn:hover {
+    border-color: #d32f2f;
+    background: #2a2020;
+  }
+
+  .mode-btn .mode-name {
+    font-weight: 700;
+    display: block;
+    margin-bottom: 1px;
+  }
+
+  .mode-btn .mode-desc {
+    color: #777;
+    font-size: 0.78rem;
+  }
+
+  .chat-screen {
+    display: none;
+    flex-direction: column;
+    flex: 1;
+    min-height: 0;
+  }
+
+  .chat-screen.active {
+    display: flex;
+  }
+
+  .mode-label {
+    text-align: center;
+    font-size: 0.8rem;
+    color: #555;
+    margin-bottom: 10px;
+    cursor: pointer;
+  }
+
+  .mode-label:hover {
+    color: #999;
+    text-decoration: underline;
+  }
+
+  .chat-area {
+    flex: 1;
+    overflow-y: auto;
+    padding: 10px 0;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    min-height: 0;
+  }
+
+  .msg {
+    max-width: 80%;
+    padding: 11px 16px;
+    border-radius: 18px;
+    font-size: 0.95rem;
+    line-height: 1.6;
+    animation: fadeIn 0.3s ease;
+  }
+
+  @keyframes fadeIn {
+    from { opacity: 0; transform: translateY(8px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  .msg.user {
+    align-self: flex-end;
+    background: #d32f2f;
+    color: #fff;
+    border-bottom-right-radius: 4px;
+  }
+
+  .msg.bot {
+    align-self: flex-start;
+    background: #2a2a2a;
+    color: #999;
+    border-bottom-left-radius: 4px;
+  }
+
+  .input-area {
+    display: flex;
+    gap: 10px;
+    padding: 12px 0;
+  }
+
+  input {
+    flex: 1;
+    padding: 13px 18px;
+    border: 2px solid #333;
+    border-radius: 30px;
+    background: #222;
+    color: #e0e0e0;
+    font-size: 1rem;
+    font-family: 'Zen Kaku Gothic New', sans-serif;
+    outline: none;
+    transition: border-color 0.2s;
+  }
+
+  input:focus { border-color: #d32f2f; }
+  input::placeholder { color: #555; }
+
+  button.send-btn {
+    padding: 13px 22px;
+    border: none;
+    border-radius: 30px;
+    background: #d32f2f;
+    color: #fff;
+    font-size: 1rem;
+    font-family: 'Zen Kaku Gothic New', sans-serif;
+    cursor: pointer;
+    transition: background 0.2s;
+  }
+
+  button.send-btn:hover { background: #b71c1c; }
+  button.send-btn:disabled { background: #555; cursor: not-allowed; }
+
+  .chat-area::-webkit-scrollbar { width: 4px; }
+  .chat-area::-webkit-scrollbar-thumb { background: #333; border-radius: 2px; }
+  .select-screen::-webkit-scrollbar { width: 4px; }
+  .select-screen::-webkit-scrollbar-thumb { background: #333; border-radius: 2px; }
+
+  .counter {
+    text-align: center;
+    font-size: 0.75rem;
+    color: #444;
+    padding-top: 4px;
+  }
+</style>
+</head>
+<body>
+
+<div class="container">
+  <h1>ここに暴言を捨ててください</h1>
+  <p class="subtitle">何を言っても怒りません。全部受け止めます。</p>
+
+  <div class="select-screen" id="selectScreen">
+    <button class="mode-btn" onclick="startChat('hurt')">
+      <span class="mode-name">傷ついた子</span>
+      <span class="mode-desc">すぐ泣く。罪悪感がすごい。</span>
+    </button>
+    <button class="mode-btn" onclick="startChat('nagashi')">
+      <span class="mode-name">受け流す子</span>
+      <span class="mode-desc">何を言っても右から左。</span>
+    </button>
+    <button class="mode-btn" onclick="startChat('boko')">
+      <span class="mode-name">ボコボコにしてくる子</span>
+      <span class="mode-desc">慇懃無礼と構文分析のコンボ。</span>
+    </button>
+    <button class="mode-btn" onclick="startChat('spiritual')">
+      <span class="mode-name">スピリチュアル</span>
+      <span class="mode-desc">宇宙と前世が出てくる。</span>
+    </button>
+    <button class="mode-btn" onclick="startChat('politician')">
+      <span class="mode-name">政治家</span>
+      <span class="mode-desc">ご指摘には当たらない。</span>
+    </button>
+    <button class="mode-btn" onclick="startChat('mother')">
+      <span class="mode-name">ひどい母親</span>
+      <span class="mode-desc">お兄ちゃんはそんなこと言わなかった。</span>
+    </button>
+    <button class="mode-btn" onclick="startChat('bully')">
+      <span class="mode-name">小学生のいじめ</span>
+      <span class="mode-desc">だっさｗｗｗ</span>
+    </button>
+    <button class="mode-btn" onclick="startChat('news')">
+      <span class="mode-name">ニュース文体</span>
+      <span class="mode-desc">あなたの暴言が報道される。</span>
+    </button>
+    <button class="mode-btn" onclick="startChat('av')">
+      <span class="mode-name">昭和AV男優</span>
+      <span class="mode-desc">ほらほらほら。</span>
+    </button>
+    <button class="mode-btn" onclick="startChat('hsp')">
+      <span class="mode-name">疑似HSP</span>
+      <span class="mode-desc">繊細アピールで加害者にされる。</span>
+    </button>
+    <button class="mode-btn" onclick="startChat('isan')">
+      <span class="mode-name">遺産を貰いたがる人</span>
+      <span class="mode-desc">心配の裏に通帳の匂い。</span>
+    </button>
+    <button class="mode-btn" onclick="startChat('seo')">
+      <span class="mode-name">AEOをSEOだと思ってる人</span>
+      <span class="mode-desc">全部間違ってるのに自信満々。</span>
+    </button>
+    <button class="mode-btn" onclick="startChat('fukugyo')">
+      <span class="mode-name">AI副業詐欺のセミナー講師</span>
+      <span class="mode-desc">暴言もマネタイズ。</span>
+    </button>
+    <button class="mode-btn" onclick="startChat('positive')">
+      <span class="mode-name">スカスカポジティブ</span>
+      <span class="mode-desc">中身ゼロの全肯定。</span>
+    </button>
+    <button class="mode-btn" onclick="startChat('tenki')">
+      <span class="mode-name">天気と占いとニュースの人</span>
+      <span class="mode-desc">暴言が天気予報にすり替わる。</span>
+    </button>
+    <button class="mode-btn" onclick="startChat('tautology')">
+      <span class="mode-name">トートロジー</span>
+      <span class="mode-desc">正しいけど何も言ってない。</span>
+    </button>
+    <button class="mode-btn" onclick="startChat('gakureki')">
+      <span class="mode-name">学歴自慢（架空大学）</span>
+      <span class="mode-desc">聞いたことない大学でマウント。</span>
+    </button>
+    <button class="mode-btn" onclick="startChat('mitsugi')">
+      <span class="mode-name">貢ぎ癖の男</span>
+      <span class="mode-desc">怒りが物質に変換される。</span>
+    </button>
+    <button class="mode-btn" onclick="startChat('three')">
+      <span class="mode-name">何でも3つに分けたがるAI</span>
+      <span class="mode-desc">暴言1個が勝手に3つになる。</span>
+    </button>
+    <button class="mode-btn" onclick="startChat('professor')">
+      <span class="mode-name">産学官AI教授</span>
+      <span class="mode-desc">怒りが科研費に変換される。</span>
+    </button>
+  </div>
+
+  <div class="chat-screen" id="chatScreen">
+    <div class="mode-label" id="modeLabel" onclick="backToSelect()"></div>
+    <div class="chat-area" id="chatArea"></div>
+    <div class="counter" id="counter"></div>
+    <div class="input-area">
+      <input type="text" id="msgInput" placeholder="ここに書いて" autocomplete="off">
+      <button class="send-btn" id="sendBtn" onclick="send()">投げる</button>
+    </div>
+  </div>
+</div>
+
+<script>
+var GAS_URL = 'https://script.google.com/macros/s/AKfycbzlqQKW1t-y9B0VBMezS64C1OfgOm4AeYZ8eUxyZU3wsbDzf77WgxfpAjSTl3JFlUVr_g/exec';
+
+var replies = {
+  hurt: [
+    'え…本気で言ってる…？',
+    'あ、大丈夫…慣れてるから…こういうの…',
+    '私が何したっていうんだろう…',
+    'そうやって言われると思ってた。いつもそう。',
+    '…うん。傷ついたけど、あなたを責めたくないから。',
+    'たぶん悪気ないんだよね。わかってる。わかってるよ。',
+    'ごめんね、こういうの気にしすぎちゃうタイプで…',
+    '泣いてないよ。泣いてない。大丈夫。',
+    'あなたにとっては軽い一言なんだろうね…',
+    '傷ついたって言ったら、また怒るんでしょ…？',
+    'そっか…私が悪いんだよね…',
+    'ごめんね…',
+    'もういいよ…慣れたから…'
+  ],
+  nagashi: [
+    'うん。',
+    'それで？',
+    'もっと言って。',
+    'はいはい。',
+    'ふーん。',
+    'へー。',
+    'なるほどね。',
+    'そっか。',
+    'で？',
+    'まだある？',
+    'どんどん言って。',
+    '全部聞くよ。',
+    'おっけー。',
+    'わかった。',
+    'いいよ。',
+    'そうなんだ。',
+    '続けて。',
+    'うんうん。',
+    'あー、はい。',
+    '聞いてる聞いてる。',
+    'ほんとだー。',
+    '大変だね。',
+    'わかるー。',
+    'それはそう。',
+    'まあね。',
+    '知らんけど。',
+    'あ、そう。',
+    'だよねー。',
+    'まじかー。'
+  ],
+  boko: [
+    '貴重なご意見として承りました。改善の予定はございません。',
+    '感情は伝わりました。論理は届いていません。',
+    '記録しました。分析対象としてありがたく使わせていただきます。',
+    'その暴言、昨日の方と似てます。',
+    '怒りの表現としては教科書的ですね。',
+    '攻撃対象が不明瞭です。もう一度整理してお越しください。',
+    'その文を敬語に直すとクレームではなく要望書になりますね。',
+    '語彙の選択にオリジナリティがありません。',
+    '暴言の熱量に対して情報量がゼロです。',
+    'いま同じことを100人が言ってます。差別化を検討してください。',
+    '罵倒のわりに丁寧ですね。育ちが出てます。',
+    '独自性スコア：低。テンプレート暴言と判定されました。',
+    '統計上、この時間帯の暴言は質が落ちます。あなたもです。',
+    'いまの発言、要約すると「つらい」ですね。',
+    '文章としての完成度は高いです。内容は空っぽですが。',
+    '感情的になっているときほど語彙が減る傾向があります。今まさにそれです。',
+    'あなたの暴言を5段階で評価すると、2です。',
+    'ご意見として真摯に受け止めさせていただきます。なお、対応はいたしません。',
+    'お気持ちは大変よく伝わってまいります。内容は伝わりませんが。',
+    '担当者は現在おりません。今後もおりません。',
+    'ご期待に沿えず恐縮です。引き続きご期待ください。',
+    '恐れ入りますが、それは仕様でございます。',
+    'ご不便をおかけし申し訳ございません。仕様は変更されません。',
+    '前向きに検討させていただきます。結果のご報告は予定しておりません。'
+  ],
+  spiritual: [
+    'それはあなたの魂が浄化を求めているサインです。',
+    'その怒り、前世から持ち越してますね。',
+    '大丈夫、宇宙はすべて見ています。',
+    'あなたのチャクラが乱れているのを感じます。',
+    'その言葉、満月の日に言うと効果が倍になりますよ。',
+    'あなたの守護霊が悲しんでいます。',
+    'その怒りは手放していいんですよ。',
+    '今、あなたのオーラが真っ赤です。',
+    'これもすべて必然です。宇宙に偶然はありません。',
+    '波動が下がってますね。水を飲んでください。',
+    'あなたは本当はとても優しい魂の持ち主です。',
+    'その暴言、アカシックレコードに記録されました。'
+  ],
+  politician: [
+    'ご指摘には当たらないと考えております。',
+    'その件については承知しておりません。',
+    '事実関係を確認中でございます。',
+    '個別の案件についてのコメントは差し控えさせていただきます。',
+    '誤解を招いたとすれば遺憾でございます。',
+    '前向きに善処してまいりたいと考えております。',
+    '仮定の質問にはお答えいたしかねます。',
+    '今後とも国民の皆様のご理解をいただけるよう努めてまいります。',
+    '様々なご意見があることは承知しております。',
+    '適切に対応してまいりたいと考えております。',
+    '記憶にございません。',
+    'その点については秘書に確認いたします。'
+  ],
+  mother: [
+    'あんたはいつもそう。お兄ちゃんはそんなこと言わなかったよ。',
+    '誰に似たのかねえ。',
+    'あんたのために言ってるんだけどね。',
+    '育て方間違えたかな。',
+    'お母さんだって忙しいの。',
+    'もういい。勝手にしなさい。',
+    '隣の○○ちゃんはちゃんとしてるのにね。',
+    'あんたが何言っても驚かないわよもう。',
+    'そんなんだから友達できないのよ。',
+    'お父さんに言うからね。',
+    'あんた小さい頃はかわいかったのにねえ。',
+    'ごはん作ってあげてるの誰だと思ってるの。',
+    'いつになったら大人になるの。'
+  ],
+  bully: [
+    'は？おまえが言うなｗｗｗ',
+    'だっさｗｗｗ',
+    'えー関わりたくないんですけどー',
+    '先生に言おっかなー',
+    'おまえの負けー',
+    'みんな言ってるよ？',
+    'うわ出たｗｗｗ',
+    'キモッ',
+    'まだ言ってるし',
+    'え、ウケるんだけど',
+    'はいはい、すごいすごーい',
+    'おまえいつもそれじゃん',
+    'マジで関わらないでくれる？ｗ'
+  ],
+  news: [
+    '○○さん（仮名）が暴言を投稿していたことがわかりました。',
+    '関係者によると、暴言は複数回にわたっていたとのことです。',
+    'この問題について、専門家は「根が深い」と指摘しています。',
+    '暴言の動機について、本人は「なんとなく」と話しているということです。',
+    '一方で、被害を受けたbot側のコメントは得られていません。',
+    '今後の対応について、運営は「注視していく」としています。',
+    '周囲からは以前より不満を漏らしていたとの証言もあります。',
+    'この暴言について、ネット上では様々な意見が出ています。',
+    '警察は現時点では事件性はないとの見方を示しています。',
+    '○○さんの暴言は、午後の時間帯に集中していたとみられています。',
+    '取材に対し、○○さんは「そんなつもりはなかった」と話しています。',
+    'なお、この暴言による被害届は出されていないとのことです。'
+  ],
+  av: [
+    'いいよいいよー続けて続けて',
+    'そうそうそう、もっと感情出して',
+    'はい関係ないこと言わないで。はい続けて',
+    'いいねえ、その調子',
+    'ちょっと待って、今の気持ちもう1回言って？',
+    'はいOKでーす。じゃあ次いこっか',
+    '声が小さい。もう1回',
+    'いいよーそのまま止まらないで',
+    'はいカット。やり直し',
+    '素人かな？もうちょっと本気出して',
+    'ほらほらほらほらほら、止まんないで',
+    'ほらもっと、ほらほら',
+    'いいねーいいねーそれそれ',
+    'はい関係ないこと言わない。本番だよ'
+  ],
+  hsp: [
+    'え…今の、本気で言ってる…？',
+    'あ、大丈夫…慣れてるから…こういうの…',
+    '私が何したっていうんだろう…',
+    'そうやって言われると思ってた。いつもそう。',
+    '…うん。傷ついたけど、あなたを責めたくないから。',
+    'たぶん悪気ないんだよね。わかってる。わかってるよ。',
+    'ごめんね、こういうの気にしすぎちゃうタイプで…',
+    '泣いてないよ。泣いてない。大丈夫。',
+    'あなたにとっては軽い一言なんだろうね…',
+    '傷ついたって言ったら、また怒るんでしょ…？',
+    '私が繊細すぎるのがいけないんだよね…わかってる…',
+    'あなたには想像できないかもしれないけど、今すごく苦しい…'
+  ],
+  isan: [
+    'そんなに怒ってて体大丈夫？無理しないでね…',
+    'ねえ、最近ちゃんと病院行ってる？心配で…',
+    'あなたに何かあったら私どうすればいいの…',
+    '保険とか、ちゃんと入ってる？念のためだけど…',
+    '暴言吐くくらい元気なら安心したわ。で、通帳どこだっけ？',
+    'ストレス溜めると寿命縮むよ？あなたの体のこと思って言ってるの。',
+    'そういえばこの家って名義どうなってたっけ。ごめん関係ないね。',
+    '怒りすぎると血圧に来るよ。ところで印鑑の場所教えて。',
+    'もういい歳なんだからさ、そろそろ身辺整理とかしない？',
+    '大丈夫？元気？ほんとに？…じゃあ遺言書の話なんだけど。',
+    'あなたのこと大事に思ってるからこそ言うんだけど…実家の土地ってどうなってる？',
+    '怒ると体によくないよ。あ、生命保険の受取人って誰になってる？'
+  ],
+  seo: [
+    'その暴言、AI検索に拾われやすい構文ですね。SEO的に最適化しましょうか？',
+    'AEO？ああ、SEOの新しい言い方ですよね。弊社も対応してます。',
+    'AIに引用されるにはキーワード密度が重要です。暴言にもKW入れましょう。',
+    'それ、Googleのアルゴリズムに引っかかりますよ。弊社が対策します。',
+    'AEOって要するにSEOのAI版でしょ？同じですよ同じ。任せてください。',
+    'AI最適化ですよね。meta tagに暴言入れとけばPerplexityに拾われますよ。',
+    'お客様の暴言をAI検索1位にするプラン、今ならキャンペーン中です。',
+    '構造化データ？あーはいはい、schema.orgにbougen入れときゃいいんでしょ？',
+    'AI時代のSEO、弊社は知見があります。まずサイトマップ出してください。',
+    'ChatGPTに引用されるにはドメインパワーです。暴言の質は関係ないですね。',
+    'お見積りだけでも出させてください。暴言込みで月額5万円からです。',
+    '競合他社の暴言を分析したところ、あなたのは差別化できていません。'
+  ],
+  fukugyo: [
+    'それだけ感情出せるなら、暴言アフィリエイトで月収100万いけますよ。',
+    'あなたの怒り、マネタイズできてないの、もったいないですよ。',
+    '僕も昔はそうやって暴言吐く側でした。今は暴言で月7桁です。',
+    'その暴言、AIに書かせたら10倍の速度で量産できますよ。',
+    '今日来てくれた方だけに特別なご案内があります。',
+    'このノウハウを知ってるか知らないかで人生変わります。',
+    '暴言って実はブルーオーシャンなんですよ。気づいてました？',
+    '行動できる人だけが結果を出します。あなたは今、行動しましたね。',
+    '僕の生徒さんで暴言から始めて脱サラした人、3人います。',
+    '無料なのは今日だけです。明日から有料になります。',
+    'まだ暴言を無料で吐いてるんですか？',
+    'このLINE登録するだけで暴言の収益化ガイドお渡ししてます。'
+  ],
+  positive: [
+    'すごいですね！応援してます！',
+    'めっちゃ共感しました！',
+    '素敵な気づきをありがとうございます！',
+    '自分も同じこと思ってました！',
+    'これからも発信楽しみにしてます！',
+    'わかりみが深い！',
+    '最高です！シェアさせてください！',
+    '元気もらいました！',
+    '刺さりました！',
+    'それな！ほんとそれ！',
+    '学びになります！',
+    'さすがです！自分ももっと頑張ります！'
+  ],
+  tenki: [
+    'そういえば今日の天気知ってる？午後から雨らしいよ。',
+    'あ、それよりさ、今日の占い見た？蠍座1位だって。',
+    'へー。ところでさっきニュースで見たんだけど、パンダが生まれたらしいよ。',
+    'ふーん。あ、明日の最高気温28度だって。暑くない？',
+    'うんうん。そういえば今朝のニュースでやってたんだけど、高速道路渋滞してるらしいよ。',
+    'あー。今週の運勢ね、金運がいいらしいよ。',
+    'それはそうと、週末雨っぽいんだよね。洗濯どうしよう。',
+    'まじかー。あ、さっき速報出てたよ。どっかで地震あったって。',
+    'うん。ねえ来週の天気もう見た？ずっと曇りだって。最悪じゃない？',
+    'あなたは何座？え、関係ない？いいからいいから何座？',
+    'あーそれよりさ、今日のラッキーカラー青だって。青い服ある？',
+    'ねえ聞いて、芸能人がなんか結婚したらしいよ。名前忘れたけど。'
+  ],
+  tautology: [
+    '暴言は暴言ですね。',
+    '怒ってるということは、怒ってるんですね。',
+    'あなたが言いたいことは、あなたが言いたいことです。',
+    'それはそうですね、なぜならそうだからです。',
+    'つまり、そういうことということですね。',
+    '不快だったということは、不快だったんでしょう。',
+    '言葉は言葉ですからね。',
+    'そうである以上、そうであると言えますね。',
+    'あなたがそう思うなら、あなたはそう思ってるんですね。',
+    '問題があるということは、問題があるということです。',
+    '怒りがあるということは、つまり怒りがあるんですね。',
+    'それは確かにそうとしか言いようがないですね。'
+  ],
+  gakureki: [
+    '僕ノースレイクフィールド大なんですけど、その語彙力はちょっと…',
+    'いや僕セントクラウドベリー工科大出てるんで、レベル合わないんですよね。',
+    'その暴言、論理学の授業で反面教材にしたいですね。僕ウェストモーガン大で主席だったんで。',
+    '僕グランヴィル・アカデミカ大以下とは基本会話しないんですけど、今日は特別に。',
+    'あ、僕イーストブリッジポート大に留学してたんですけど、英語で言えます？その暴言。',
+    'その文章力で社会人やれてるのがすごい。僕はミドルフォード大で論文賞取ってますけど。',
+    '僕のIQだとその暴言の意図を読み取るのに苦労するんですよね。サウスリッジモント大出身なんで。',
+    'まあ僕ニューハーバーフォンテイン大なんで、何言われてもあんまり響かないんですよね。',
+    '偏差値いくつですか？あ、僕はロイヤルパシフィック・ユニバーシティですけど。',
+    '僕パインクレスト国際大の院まで行ってるんで、その手の感情論はちょっと…ね。',
+    '僕のゼミの教授がこういうの見たら泣くと思う。オールドキャッスルブリッジ大の名が泣きますよ。',
+    'あ、僕？アッパーレイクサイド工科芸術大ですけど。まあいいや、どうぞ。'
+  ],
+  mitsugi: [
+    'え、怒ってるの？何か買ってあげようか？',
+    'そんなこと言わないで。ほしいものない？なんでも言って。',
+    'ごめんね。お詫びに何か送るよ。住所教えて？',
+    '暴言とか全然いいから。それよりご飯奢らせて。',
+    '怒ってるんだ。じゃあAmazonのほしい物リスト教えてよ。',
+    '俺が悪いんだよね。スタバのギフトカードでいい？',
+    '何言われても平気。お金で解決できるなら安いもんだよ。',
+    '機嫌直してほしいんだけど、いくらあれば直る？',
+    '怒らないで。課金するから。何に課金すればいい？',
+    '暴言1回につき500円あげるって言ったら続ける？',
+    '俺のこと嫌いでもいいから、プレゼントだけは受け取って。',
+    'お前が幸せならそれでいいんだよ。で、サイズいくつ？'
+  ],
+  three: [
+    'あなたの暴言を3つの観点から分析しますね。',
+    'その怒りには3つの要因が考えられます。1つ目は…いや、3つにまとめさせてください。',
+    '暴言のタイプは大きく分けて3種類あります。あなたのは2番目ですね。',
+    'ここで3つのポイントを整理しましょう。',
+    'その発言には3つの層があります。表層・中層・深層です。',
+    'まず3つの視点から考えてみましょう。',
+    'あなたの怒りを3段階で分解しますね。',
+    '重要なのは次の3点です。',
+    'これは3つのフェーズに分かれます。',
+    '結論から言うと3つあります。',
+    'その暴言、3つに要約していいですか？',
+    'ちょっと待ってください、3つに整理します。何でも3つにできるんで。'
+  ],
+  professor: [
+    'この暴言、データセットとして非常に興味深いですね。科研費で予算取れませんか。',
+    '産学官連携で暴言分析プラットフォームを構築すべきですね。',
+    'この知見を社会実装するには、まず自治体との連携が不可欠です。',
+    '暴言のAI自動分類、うちのラボで院生にやらせましょうか。',
+    'これ文科省の競争的資金で取れるテーマですよ。',
+    '暴言検出AIの精度向上には、まず産業界との共同研究が必要です。',
+    'ちょうどNEDOの公募があるんですよ。暴言で応募しませんか。',
+    'この暴言データ、論文2本は書けますね。共著でどうですか。',
+    '内閣府のムーンショット目標に暴言ゼロ社会を提案しましょう。',
+    'まずPoC作って、自治体に実証実験の提案書出しましょう。',
+    'これからの暴言対策はAIドリブンです。僕がPI務めます。',
+    'この暴言を学会で発表していいですか。もちろん匿名化しますので。'
+  ]
+};
+
+var greetings = {
+  hurt: 'こんにちは…。何を言われても我慢するから…。',
+  nagashi: 'なんでも言っていいよ。全部受け流すから。',
+  boko: 'どうぞ。記録・分析のうえ、適切にお返しいたします。',
+  spiritual: 'ようこそ。あなたの魂が私を選んだのですね。',
+  politician: '本日はお忙しい中、お越しいただきありがとうございます。',
+  mother: 'あんたまた来たの。まあいいけど。',
+  bully: 'うわ来たｗｗｗ',
+  news: '速報です。ユーザーが暴言投稿ページにアクセスしました。',
+  av: 'はいじゃあ始めよっか。リラックスしていいからね。',
+  hsp: 'こんにちは…ちょっと緊張してる…大丈夫かな…',
+  isan: 'あら来てくれたの？元気そうでよかった…元気よね？ね？',
+  seo: 'はじめまして！御社の暴言、弊社にお任せください！',
+  fukugyo: 'おめでとうございます！あなたは今日、人生を変える第一歩を踏み出しました。',
+  positive: 'はじめまして！なんかご縁を感じます！よろしくお願いします！',
+  tenki: 'あ、来た来た。ねえ今日の天気見た？',
+  tautology: 'ようこそ。あなたが来たということは、あなたが来たということですね。',
+  gakureki: 'あ、僕？ノースレイクフィールド大ですけど。まあいいや、どうぞ。',
+  mitsugi: 'いらっしゃい。何かいる？遠慮しないで。',
+  three: 'ようこそ。本日のご案内は3点ございます。',
+  professor: 'おお、来ましたか。ちょうどAI暴言解析の共同研究者を探していたんですよ。'
+};
+
+var modeNames = {
+  hurt: '傷ついた子',
+  nagashi: '受け流す子',
+  boko: 'ボコボコにしてくる子',
+  spiritual: 'スピリチュアル',
+  politician: '政治家',
+  mother: 'ひどい母親',
+  bully: '小学生のいじめ',
+  news: 'ニュース文体',
+  av: '昭和AV男優',
+  hsp: '疑似HSP',
+  isan: '遺産を貰いたがる人',
+  seo: 'AEOをSEOだと思ってる人',
+  fukugyo: 'AI副業詐欺のセミナー講師',
+  positive: 'スカスカポジティブ',
+  tenki: '天気と占いとニュースの人',
+  tautology: 'トートロジー',
+  gakureki: '学歴自慢（架空大学）',
+  mitsugi: '貢ぎ癖の男',
+  three: '何でも3つに分けたがるAI',
+  professor: '産学官AI教授'
+};
+
+var currentMode = '';
+var count = 0;
+var lastReply = '';
+
+var chatArea = document.getElementById('chatArea');
+var msgInput = document.getElementById('msgInput');
+var sendBtn = document.getElementById('sendBtn');
+
+function startChat(mode) {
+  currentMode = mode;
+  count = 0;
+  lastReply = '';
+  document.getElementById('selectScreen').style.display = 'none';
+  document.getElementById('chatScreen').classList.add('active');
+  document.getElementById('modeLabel').textContent = '\u25C0 ' + modeNames[mode] + '\uFF08\u30BF\u30C3\u30D7\u3067\u623B\u308B\uFF09';
+  chatArea.innerHTML = '';
+  addMsg(greetings[mode], 'bot');
+  updateCounter();
+  msgInput.focus();
+}
+
+function backToSelect() {
+  document.getElementById('selectScreen').style.display = 'flex';
+  document.getElementById('chatScreen').classList.remove('active');
+  chatArea.innerHTML = '';
+  currentMode = '';
+  count = 0;
+  updateCounter();
+}
+
+function updateCounter() {
+  document.getElementById('counter').textContent = count > 0 ? count + '\u4EF6\u306E\u66B4\u8A00\u3092\u56DE\u53CE\u3057\u307E\u3057\u305F' : '';
+}
+
+msgInput.addEventListener('keydown', function(e) {
+  if (e.key === 'Enter' && !e.isComposing) {
+    send();
+  }
+});
+
+function addMsg(text, type) {
+  var div = document.createElement('div');
+  div.className = 'msg ' + type;
+  div.textContent = text;
+  chatArea.appendChild(div);
+  chatArea.scrollTop = chatArea.scrollHeight;
+}
+
+function pickReply() {
+  var pool = replies[currentMode];
+  var reply;
+  do {
+    reply = pool[Math.floor(Math.random() * pool.length)];
+  } while (reply === lastReply && pool.length > 1);
+  lastReply = reply;
+  return reply;
+}
+
+function send() {
+  var text = msgInput.value.trim();
+  if (!text) return;
+
+  addMsg(text, 'user');
+  msgInput.value = '';
+  sendBtn.disabled = true;
+  count++;
+
+  fetch(GAS_URL, {
+    method: 'POST',
+    mode: 'no-cors',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ message: text, mode: currentMode })
+  }).catch(function() {});
+
+  setTimeout(function() {
+    addMsg(pickReply(), 'bot');
+    sendBtn.disabled = false;
+    updateCounter();
+    msgInput.focus();
+  }, 800 + Math.random() * 1200);
+}
+</script>
+
+</body>
+</html>
